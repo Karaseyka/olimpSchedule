@@ -6,7 +6,7 @@ import datetime
 from PyQt5 import uic
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem, QHBoxLayout, QLabel, QWidget, QVBoxLayout, \
-    QFrame, QMessageBox
+    QFrame, QMessageBox, QListWidget
 
 
 class MyWidget(QMainWindow):
@@ -35,7 +35,6 @@ class Authentication(QMainWindow):
         dlg.setIcon(QMessageBox.Question)
         button = dlg.exec()
         if button == QMessageBox.Yes:
-            print("Yes!")
             con = sqlite3.connect("olimp.sqlite")
             cur = con.cursor()
             cur.execute(f'INSERT INTO user (name, class, birth, insession) VALUES (?, ?, ?, ?)',
@@ -50,11 +49,14 @@ class Authentication(QMainWindow):
 class MainPG(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.que = []
         uic.loadUi("mainDis.ui", self)
         self.olimps = csv_getter()
         self.for_list()
         self.listWidget.setStyleSheet('QListWidget::item { border: 1px solid black; } QListWidget::item:selected { '
                                       'background: lightblue; }')
+        self.listWidget.itemClicked.connect(self.run)
+
         self.user = get_user()
         self.name.setText(self.user[1])
         self.clas.setText(str(self.user[2]))
@@ -80,6 +82,26 @@ class MainPG(QMainWindow):
             widget = get_item_wight(ship_data)  # Call the above function to get the corresponding
             self.listWidget.addItem(item)  # Add item
             self.listWidget.setItemWidget(item, widget)
+
+    def run(self, item):
+        x = self.listWidget.indexFromItem(item).row()  # индекс выбранного элемента
+        self.to_prewatch = Prewatch(self.olimps[x])
+        if len(self.que) == 0:
+            self.que.append(self.to_prewatch)
+            self.to_prewatch.show()
+        else:
+            self.que[0].close()
+            self.que = [self.to_prewatch]
+            self.to_prewatch.show()
+
+
+class Prewatch(QMainWindow):
+    def __init__(self, olimp):
+        super().__init__()
+        uic.loadUi("prewatch.ui", self)
+        self.olimp = olimp
+        self.olimpName.setText(olimp[0])
+
 
 
 def get_item_wight(olimp):
