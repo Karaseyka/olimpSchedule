@@ -6,6 +6,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidgetItem, QHBoxLayout, QLabel, QWidget, QVBoxLayout, \
     QFrame, QMessageBox, QListWidget, QInputDialog, QLineEdit, QPushButton
+from PyQt5.QtGui import QPixmap
 
 
 class WelcomePG(QMainWindow):
@@ -52,7 +53,9 @@ class MainPG(QMainWindow):
         uic.loadUi("mainDis.ui", self)
         self.olimps = csv_getter()
         self.for_list()
-        self.listWidget.setStyleSheet('QListWidget::item { border: 1px solid black; } QListWidget::item:selected { '
+        self.listWidget.setStyleSheet('QListWidget::item '
+                                      '{ border: 1px solid black; }'
+                                      ' QListWidget::item:selected { '
                                       'background: lightblue; }')
         self.listWidget.itemClicked.connect(self.run)
         self.user = get_user()
@@ -63,9 +66,45 @@ class MainPG(QMainWindow):
         self.birth.setDate(date_time_obj.date())
         self.savech.clicked.connect(self.save)
         self.for_list_added()
-        self.listWidget2.setStyleSheet('QListWidget::item { border: 1px solid black; } QListWidget::item:selected { '
+        self.listWidget2.setStyleSheet('QListWidget::item { border: 1px solid black; }'
+                                       ' QListWidget::item:selected { '
                                        'background: lightblue; }')
         self.listWidget2.itemClicked.connect(self.run_added)
+
+        connection = sqlite3.connect('olimp.sqlite')
+        cursor = connection.cursor()
+        self.nearOlimp = cursor.execute("""SELECT name, olid, date, time, olimpsus.id FROM olimpsus, status
+                WHERE status.id = olimpsus.status""").fetchall()
+        connection.commit()
+        connection.close()
+        self.sort_near_olimp = sorted(self.nearOlimp, key=self.sort_key)
+        self.str_of_near_olimp = ""
+        print(self.sort_near_olimp)
+        for i in self.sort_near_olimp:
+            if datetime.datetime.strptime(i[2] + " " + i[3],
+                                          '%d.%m.%Y %H:%M') >= datetime.datetime.now():
+                self.str_of_near_olimp += self.olimps[i[1]][0]
+                self.nearLabel.setText(self.str_of_near_olimp)
+                self.str_of_near_olimp = ""
+                self.str_of_near_olimp += i[0]
+                self.nearLabel_2.setText(self.str_of_near_olimp)
+                self.str_of_near_olimp = ""
+                self.str_of_near_olimp += i[2]
+                self.str_of_near_olimp += " "
+                self.str_of_near_olimp += i[3]
+                self.nearLabel_3.setText(self.str_of_near_olimp)
+                break
+        else:
+            self.nearLabel.setText("Нет предстоящих событий")
+
+        self.pixmap = QPixmap('orig.png')
+        self.logo.setPixmap(self.pixmap)
+
+    def sort_key(self, k):
+        if len(k[3]) == 4:
+            return k[2] + "0" + k[3]
+        else:
+            return k[2] + k[3]
 
     def save(self):
         connection = sqlite3.connect('olimp.sqlite')
@@ -138,7 +177,7 @@ class MainPG(QMainWindow):
     def delete(self, olimp):
         connection = sqlite3.connect('olimp.sqlite')
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM olimpsus WHERE id = ?", (olimp[4], ))
+        cursor.execute("DELETE FROM olimpsus WHERE id = ?", (olimp[4],))
         connection.commit()
         connection.close()
         self.mn_reload = MainPG()
