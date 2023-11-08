@@ -79,7 +79,6 @@ class MainPG(QMainWindow):
         connection.close()
         self.sort_near_olimp = sorted(self.nearOlimp, key=self.sort_key)
         self.str_of_near_olimp = ""
-        print(self.sort_near_olimp)
         for i in self.sort_near_olimp:
             if datetime.datetime.strptime(i[2] + " " + i[3],
                                           '%d.%m.%Y %H:%M') >= datetime.datetime.now():
@@ -99,6 +98,25 @@ class MainPG(QMainWindow):
 
         self.pixmap = QPixmap('orig.png')
         self.logo.setPixmap(self.pixmap)
+        self.uch = 0
+        for i in self.nearOlimp:
+            if i[0] == "Участник":
+                self.uch += 1
+        self.uch = str(self.uch)
+        self.uchLab.setText(self.uch)
+        self.win = 0
+        for i in self.nearOlimp:
+            if i[0] == "Победитель":
+                self.win += 1
+        self.win = str(self.win)
+        self.winLab.setText(self.win)
+        self.prize = 0
+        for i in self.nearOlimp:
+            if i[0] == "Призёр":
+                self.prize += 1
+        self.prize = str(self.prize)
+        self.prizeLab.setText(self.prize)
+        self.all_static.clicked.connect(self.to_all_static)
 
     def sort_key(self, k):
         if len(k[3]) == 4:
@@ -111,8 +129,6 @@ class MainPG(QMainWindow):
         cursor = connection.cursor()
         cursor.execute('UPDATE user SET name = ?, class = ?, birth = ? WHERE id = ?',
                        (self.name.text(), self.clas.text(), self.birth.text(), self.user[0]))
-
-        # Сохраняем изменения и закрываем соединение
         connection.commit()
         connection.close()
 
@@ -184,6 +200,9 @@ class MainPG(QMainWindow):
         self.mn_reload.show()
         self.close()
 
+    def to_all_static(self):
+        self.to_static = AllStatic()
+
 
 class Prewatch(QMainWindow):
     def __init__(self, olimp, num, mn, is_update=-1):
@@ -200,7 +219,8 @@ class Prewatch(QMainWindow):
         self.profil.setText("Профиль: " + olimp[3])
         self.connection = sqlite3.connect('olimp.sqlite')
         self.cur = self.connection.cursor()
-        st = self.cur.execute("SELECT * FROM status").fetchall()
+        st = (self.cur
+              .execute("SELECT * FROM status").fetchall())
         self.connection.commit()
         for i in st:
             self.comboBox.addItem(i[1])
@@ -211,12 +231,14 @@ class Prewatch(QMainWindow):
     def run(self):
         if self.is_update == -1:
             self.cur.execute(f'INSERT INTO olimpsus (status, olid, date, time) VALUES (?, ?, ?, ?)',
-                             (int(self.cur_status) + 1, int(self.num), self.dateEdit.text(), self.timeEdit.text()))
+                             (int(self.cur_status) + 1, int(self.num),
+                              self.dateEdit.text(), self.timeEdit.text()))
             self.connection.commit()
             self.mn.close()
         else:
             self.cur.execute('UPDATE olimpsus SET status = ?, olid = ?, date = ?, time = ? WHERE id = ?',
-                             (int(self.cur_status) + 1, int(self.num), self.dateEdit.text(), self.timeEdit.text(),
+                             (int(self.cur_status) + 1,
+                              int(self.num), self.dateEdit.text(), self.timeEdit.text(),
                               self.is_update))
             self.connection.commit()
             self.mn.close()
@@ -228,12 +250,14 @@ class Prewatch(QMainWindow):
         self.cur_status = text
 
     def addStut(self):
-        newstatus, ok = QInputDialog.getText(self, "Добавление статуса", "Введите название статуса", QLineEdit.Normal)
+        newstatus, ok = QInputDialog.getText(self, "Добавление статуса",
+                                             "Введите название статуса", QLineEdit.Normal)
         if ok:
             try:
                 connection = sqlite3.connect('olimp.sqlite')
                 cur = connection.cursor()
-                cur.execute(f'INSERT INTO status (name) VALUES (?)', (newstatus,))
+                cur.execute(f'INSERT INTO status (name) VALUES (?)',
+                            (newstatus,))
                 connection.commit()
                 connection.close()
                 self.rePre = Prewatch(self.olimp, self.num, self.mn)
@@ -242,6 +266,10 @@ class Prewatch(QMainWindow):
             except sqlite3.Error as error:
                 print("Ошибка при работе с SQLite", error)
 
+
+class AllStatic(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
 def get_item_wight(olimp):
     frame = QFrame()
