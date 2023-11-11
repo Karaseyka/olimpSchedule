@@ -255,6 +255,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
         <widget class="QLabel" name="winLab">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>0</string>
          </property>
@@ -262,6 +267,11 @@
        </item>
        <item>
         <widget class="QLabel" name="uchLab">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>0</string>
          </property>
@@ -269,6 +279,11 @@
        </item>
        <item>
         <widget class="QLabel" name="prizeLab">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>0</string>
          </property>
