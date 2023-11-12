@@ -104,7 +104,6 @@ class MainPG(QMainWindow):  # главный экран
                 break
         else:
             self.nearLabel.setText("Нет предстоящих событий")
-
         self.pixmap = QPixmap('orig.png')
         self.logo.setPixmap(self.pixmap)
         self.uch = 0
@@ -126,6 +125,11 @@ class MainPG(QMainWindow):  # главный экран
         self.prize = str(self.prize)
         self.prizeLab.setText(self.prize)
         self.all_static.clicked.connect(self.to_all_static)
+        self.newOlimp.clicked.connect(self.to_new_olimp)
+
+    def to_new_olimp(self):  # переход на создание новой олимпиады
+        self.to_cr_olimp = NewOlimp(self)
+        self.to_cr_olimp.show()
 
     def sort_key(self, k):  # метод для сортировки дат (компаратор для лямбды)
         if len(k[3]) == 4:
@@ -169,7 +173,7 @@ class MainPG(QMainWindow):  # главный экран
             self.listWidget2.addItem(item)
             self.listWidget2.setItemWidget(item, widget)
 
-    def run(self, item):   # действие по нажатию на айтем (переход на другой экран)
+    def run(self, item):  # действие по нажатию на айтем (переход на другой экран)
         x = self.listWidget.indexFromItem(item).row()  # индекс выбранного элемента
         self.to_prewatch = Prewatch(self.olimps[x], x, self)
         if len(self.que) == 0:
@@ -223,6 +227,41 @@ class MainPG(QMainWindow):  # главный экран
         self.to_static.show()
         self.to_gr = Graph()
         self.to_gr.show()
+
+
+class NewOlimp(QMainWindow):  # для добавления окна
+    def __init__(self, pred):  # формирование окна
+        super().__init__()
+        uic.loadUi("newOl.ui", self)
+        self.prof = getProfCSV()
+        self.pred = pred
+        for i in self.prof:
+            self.comboProf.addItem(i[1])
+        self.okBt.clicked.connect(self.adding)
+        self.cur_status = 0
+        self.comboProf.activated.connect(self.onActivated)
+
+    def adding(self):  # создание новой олимпиады в бд
+        try:
+            with open('olimps.csv', "a", newline="") as csvfile:
+                writer = csv.writer(csvfile, delimiter=';', quotechar='"')
+                name = self.olimpName.text()
+                op = self.about.text()
+                lev = self.lev.text()
+                if self.cur_status == 5:
+                    self.cur_status = "ALL"
+                row = [name, op, lev, self.cur_status + 1]
+                writer.writerow(row)
+            csvfile.close()
+        except Exception:
+            pass
+        self.pred.close()
+        self.pred = MainPG()
+        self.pred.show()
+        self.close()
+
+    def onActivated(self, text):  # комбобокс
+        self.cur_status = text
 
 
 class Prewatch(QMainWindow):  # окно для предпросмотра олимпиады
@@ -348,7 +387,7 @@ class ChangeUD(QMainWindow):  # окно изменения добавленны
                 print("Ошибка при работе с SQLite", error)
 
 
-class AllStatic(QMainWindow):   # окно с диаграммой
+class AllStatic(QMainWindow):  # окно с диаграммой
     def __init__(self):  # формирование окна
         super().__init__()
         self.setWindowTitle("Круговая диаграмма")
@@ -431,7 +470,7 @@ class Graph(QMainWindow):  # окно с графиками участия
         self.cur_status = text
 
 
-def get_item_wight(olimp):
+def get_item_wight(olimp):  # разметка айтема
     frame = QFrame()
     layout_main = QVBoxLayout()
     layout_main.addWidget(QLabel(olimp[0]))
@@ -442,7 +481,7 @@ def get_item_wight(olimp):
     return frame
 
 
-def csv_getter():
+def csv_getter():  # получение названий олимпиад
     olimps = []
     try:
         with open('olimps.csv', newline="") as csvfile:
@@ -463,7 +502,18 @@ def csv_getter():
     return olimps
 
 
-def get_user():
+def getProfCSV():  # получение профилей
+    try:
+        with open('prof.csv', newline="") as csvfile:
+            reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+            prof = list(reader)
+        csvfile.close()
+    except Exception:
+        pass
+    return prof
+
+
+def get_user():  # получение данных о пользователе
     try:
         connection = sqlite3.connect('olimp.sqlite')
         cur = connection.cursor()
@@ -477,11 +527,27 @@ def get_user():
         print("Ошибка при работе с SQLite", error)
 
 
+def check():  # Предварительная проверка
+    k = []
+    for i in range(10):
+        k.append(i)
+    for i in range(10):
+        if k[i] == i:
+            return True
+        else:
+            try:
+                return False
+            except Exception:
+                return None
+
+
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    if not get_user():
-        ex = WelcomePG()
-    else:
-        ex = MainPG()
-    ex.show()
-    sys.exit(app.exec_())
+    k = check()
+    if k:
+        app = QApplication(sys.argv)
+        if not get_user():
+            ex = WelcomePG()
+        else:
+            ex = MainPG()
+        ex.show()
+        sys.exit(app.exec_())

@@ -49,7 +49,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>2</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideNone</enum>
@@ -315,8 +315,21 @@
         <x>5</x>
         <y>1</y>
         <width>781</width>
-        <height>521</height>
+        <height>451</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="newOlimp">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>470</y>
+        <width>191</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Добавить новую олимпиаду</string>
       </property>
      </widget>
     </widget>
