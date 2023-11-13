@@ -395,8 +395,8 @@ class AllStatic(QMainWindow):  # окно с диаграммой
         self.create_diogram()
 
     def create_diogram(self):  # создание диаграммы
-        dio = QPieSeries()
         try:
+            dio = QPieSeries()
             connection = sqlite3.connect('olimp.sqlite')
             cursor = connection.cursor()
             added_olimps = cursor.execute("""SELECT name FROM olimpsus, status
@@ -430,7 +430,7 @@ class Graph(QMainWindow):  # окно с графиками участия
         super().__init__()
         uic.loadUi("gr.ui", self)
         self.acces.clicked.connect(self.run)
-        self.cur_status = ""
+        self.cur_status = 0
         try:
             connection = sqlite3.connect('olimp.sqlite')
             cursor = connection.cursor()
